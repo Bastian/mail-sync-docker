@@ -9,7 +9,7 @@ MAILDIR_PATH="${MAILDIR_PATH:-/mail}"
 
 # Config files (ephemeral, regenerated on every start)
 MBSYNC_CONFIG="/tmp/mbsyncrc"
-NOTIFY_CONFIG="/tmp/goimapnotify.conf"
+NOTIFY_CONFIG="/tmp/goimapnotify.json"
 
 # Validate required environment variables
 if [ -z "${IMAP_HOST:-}" ]; then
@@ -75,8 +75,13 @@ chmod 600 "$MBSYNC_CONFIG"
 # Determine TLS settings for goimapnotify
 if [ "$IMAP_TLS" = "IMAPS" ]; then
     NOTIFY_TLS="true"
+    NOTIFY_STARTTLS="false"
+elif [ "$IMAP_TLS" = "STARTTLS" ]; then
+    NOTIFY_TLS="false"
+    NOTIFY_STARTTLS="true"
 else
     NOTIFY_TLS="false"
+    NOTIFY_STARTTLS="false"
 fi
 
 if [ "$TLS_SKIP_VERIFY" = "true" ]; then
@@ -88,18 +93,27 @@ fi
 # Generate goimapnotify config
 cat > "$NOTIFY_CONFIG" << EOF
 {
-  "host": "${IMAP_HOST}",
-  "port": ${IMAP_PORT},
-  "tls": ${NOTIFY_TLS},
-  "tlsOptions": {
-    "rejectUnauthorized": ${NOTIFY_REJECT_UNAUTHORIZED}
-  },
-  "username": "${IMAP_USER}",
-  "password": "${IMAP_PASS}",
-  "boxes": ["INBOX"],
-  "onNewMail": "mbsync -c ${MBSYNC_CONFIG} -a",
-  "onNewMailPost": "",
-  "wait": 1
+  "configurations": [
+    {
+      "host": "${IMAP_HOST}",
+      "port": ${IMAP_PORT},
+      "tls": ${NOTIFY_TLS},
+      "tlsOptions": {
+        "starttls": ${NOTIFY_STARTTLS},
+        "rejectUnauthorized": ${NOTIFY_REJECT_UNAUTHORIZED}
+      },
+      "username": "${IMAP_USER}",
+      "password": "${IMAP_PASS}",
+      "onNewMail": "mbsync -c ${MBSYNC_CONFIG} -a",
+      "onNewMailPost": "SKIP",
+      "wait": 1,
+      "boxes": [
+        {
+          "mailbox": "INBOX"
+        }
+      ]
+    }
+  ]
 }
 EOF
 
