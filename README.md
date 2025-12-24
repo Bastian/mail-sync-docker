@@ -38,14 +38,15 @@ docker logs -f mail-sync
 
 ## Environment Variables
 
-| Variable       | Required | Default | Description                          |
-| -------------- | -------- | ------- | ------------------------------------ |
-| `IMAP_HOST`    | Yes      | -       | IMAP server hostname                 |
-| `IMAP_USER`    | Yes      | -       | IMAP username                        |
-| `IMAP_PASS`    | Yes      | -       | IMAP password                        |
-| `IMAP_PORT`    | No       | 993     | IMAP port                            |
-| `IMAP_TLS`     | No       | IMAPS   | TLS mode: IMAPS, STARTTLS, or None   |
-| `MAILDIR_PATH` | No       | /mail   | Path inside container                |
+| Variable          | Required | Default | Description                          |
+| ----------------- | -------- | ------- | ------------------------------------ |
+| `IMAP_HOST`       | Yes      | -       | IMAP server hostname                 |
+| `IMAP_USER`       | Yes      | -       | IMAP username                        |
+| `IMAP_PASS`       | Yes      | -       | IMAP password                        |
+| `IMAP_PORT`       | No       | 993     | IMAP port                            |
+| `IMAP_TLS`        | No       | IMAPS   | TLS mode: IMAPS, STARTTLS, or None   |
+| `TLS_SKIP_VERIFY` | No       | false   | Accept self-signed certificates      |
+| `MAILDIR_PATH`    | No       | /mail   | Path inside container                |
 
 ## Volumes
 

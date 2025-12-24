@@ -4,6 +4,7 @@ set -euo pipefail
 # Default values
 IMAP_PORT="${IMAP_PORT:-993}"
 IMAP_TLS="${IMAP_TLS:-IMAPS}"
+TLS_SKIP_VERIFY="${TLS_SKIP_VERIFY:-false}"
 MAILDIR_PATH="${MAILDIR_PATH:-/mail}"
 
 # Config files (ephemeral, regenerated on every start)
@@ -31,6 +32,17 @@ echo "Configuring mail sync for $IMAP_USER@$IMAP_HOST"
 # Create Maildir structure
 mkdir -p "$MAILDIR_PATH"
 
+# Handle certificate verification
+CERT_FILE="/etc/ssl/certs/ca-certificates.crt"
+if [ "$TLS_SKIP_VERIFY" = "true" ] && [ "$IMAP_TLS" != "None" ]; then
+    echo "Fetching server certificate (TLS_SKIP_VERIFY=true)..."
+    CERT_FILE="/tmp/server-cert.pem"
+    echo | openssl s_client -connect "${IMAP_HOST}:${IMAP_PORT}" -starttls imap 2>/dev/null | \
+        openssl x509 > "$CERT_FILE" 2>/dev/null || \
+    echo | openssl s_client -connect "${IMAP_HOST}:${IMAP_PORT}" 2>/dev/null | \
+        openssl x509 > "$CERT_FILE" 2>/dev/null || true
+fi
+
 # Generate mbsyncrc
 cat > "$MBSYNC_CONFIG" << EOF
 IMAPAccount default
@@ -39,7 +51,7 @@ Port ${IMAP_PORT}
 User ${IMAP_USER}
 Pass ${IMAP_PASS}
 SSLType ${IMAP_TLS}
-CertificateFile /etc/ssl/certs/ca-certificates.crt
+CertificateFile ${CERT_FILE}
 
 IMAPStore default-remote
 Account default
@@ -67,6 +79,12 @@ else
     NOTIFY_TLS="false"
 fi
 
+if [ "$TLS_SKIP_VERIFY" = "true" ]; then
+    NOTIFY_REJECT_UNAUTHORIZED="false"
+else
+    NOTIFY_REJECT_UNAUTHORIZED="true"
+fi
+
 # Generate goimapnotify config
 cat > "$NOTIFY_CONFIG" << EOF
 {
@@ -74,7 +92,7 @@ cat > "$NOTIFY_CONFIG" << EOF
   "port": ${IMAP_PORT},
   "tls": ${NOTIFY_TLS},
   "tlsOptions": {
-    "rejectUnauthorized": true
+    "rejectUnauthorized": ${NOTIFY_REJECT_UNAUTHORIZED}
   },
   "username": "${IMAP_USER}",
   "password": "${IMAP_PASS}",

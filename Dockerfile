@@ -10,7 +10,8 @@ RUN apk add --no-cache \
     isync \
     ca-certificates \
     bash \
-    tini
+    tini \
+    openssl
 
 COPY --from=builder /go/bin/goimapnotify /usr/local/bin/goimapnotify
 
