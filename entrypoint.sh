@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Default values
 IMAP_PORT="${IMAP_PORT:-993}"
+IMAP_TLS="${IMAP_TLS:-IMAPS}"
 MAILDIR_PATH="${MAILDIR_PATH:-/mail}"
 
 # Config files (ephemeral, regenerated on every start)
@@ -37,7 +38,7 @@ Host ${IMAP_HOST}
 Port ${IMAP_PORT}
 User ${IMAP_USER}
 Pass ${IMAP_PASS}
-SSLType IMAPS
+SSLType ${IMAP_TLS}
 CertificateFile /etc/ssl/certs/ca-certificates.crt
 
 IMAPStore default-remote
@@ -59,12 +60,19 @@ EOF
 
 chmod 600 "$MBSYNC_CONFIG"
 
+# Determine TLS settings for goimapnotify
+if [ "$IMAP_TLS" = "IMAPS" ]; then
+    NOTIFY_TLS="true"
+else
+    NOTIFY_TLS="false"
+fi
+
 # Generate goimapnotify config
 cat > "$NOTIFY_CONFIG" << EOF
 {
   "host": "${IMAP_HOST}",
   "port": ${IMAP_PORT},
-  "tls": true,
+  "tls": ${NOTIFY_TLS},
   "tlsOptions": {
     "rejectUnauthorized": true
   },
