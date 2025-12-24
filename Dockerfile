@@ -1,7 +1,7 @@
 # Stage 1: Build goimapnotify
 FROM golang:1.21-alpine AS builder
 
-RUN go install gitlab.com/shackra/goimapnotify@latest
+RUN go install gitlab.com/shackra/goimapnotify@2.5.4
 
 # Stage 2: Final image
 FROM alpine:3.19
