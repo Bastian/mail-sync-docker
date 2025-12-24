@@ -5,6 +5,10 @@ set -euo pipefail
 IMAP_PORT="${IMAP_PORT:-993}"
 MAILDIR_PATH="${MAILDIR_PATH:-/mail}"
 
+# Config files (ephemeral, regenerated on every start)
+MBSYNC_CONFIG="/tmp/mbsyncrc"
+NOTIFY_CONFIG="/tmp/goimapnotify.conf"
+
 # Validate required environment variables
 if [ -z "${IMAP_HOST:-}" ]; then
     echo "ERROR: IMAP_HOST is required"
@@ -27,7 +31,7 @@ echo "Configuring mail sync for $IMAP_USER@$IMAP_HOST"
 mkdir -p "$MAILDIR_PATH"
 
 # Generate mbsyncrc
-cat > ~/.mbsyncrc << EOF
+cat > "$MBSYNC_CONFIG" << EOF
 IMAPAccount default
 Host ${IMAP_HOST}
 Port ${IMAP_PORT}
@@ -53,10 +57,10 @@ Expunge Both
 SyncState *
 EOF
 
-chmod 600 ~/.mbsyncrc
+chmod 600 "$MBSYNC_CONFIG"
 
 # Generate goimapnotify config
-cat > ~/.goimapnotify.conf << EOF
+cat > "$NOTIFY_CONFIG" << EOF
 {
   "host": "${IMAP_HOST}",
   "port": ${IMAP_PORT},
@@ -67,17 +71,17 @@ cat > ~/.goimapnotify.conf << EOF
   "username": "${IMAP_USER}",
   "password": "${IMAP_PASS}",
   "boxes": ["INBOX"],
-  "onNewMail": "mbsync -a",
+  "onNewMail": "mbsync -c ${MBSYNC_CONFIG} -a",
   "onNewMailPost": "",
   "wait": 1
 }
 EOF
 
-chmod 600 ~/.goimapnotify.conf
+chmod 600 "$NOTIFY_CONFIG"
 
 # Initial sync
 echo "Running initial sync..."
-mbsync -a
+mbsync -c "$MBSYNC_CONFIG" -a
 
 echo "Initial sync complete. Starting IDLE watcher..."
 

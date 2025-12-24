@@ -17,12 +17,5 @@ COPY --from=builder /go/bin/goimapnotify /usr/local/bin/goimapnotify
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
-RUN adduser -D -h /home/mailsync mailsync && \
-    mkdir -p /mail && \
-    chown -R mailsync:mailsync /mail
-USER mailsync
-WORKDIR /home/mailsync
-ENV HOME=/home/mailsync
-
 ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/entrypoint.sh"]
-CMD ["goimapnotify", "-conf", "/home/mailsync/.goimapnotify.conf"]
+CMD ["goimapnotify", "-conf", "/tmp/goimapnotify.conf"]
