@@ -4,7 +4,7 @@ FROM golang:1.25-alpine AS builder
 RUN go install gitlab.com/shackra/goimapnotify@2.5.4
 
 # Stage 2: Final image
-FROM alpine:3.19
+FROM alpine:3.22
 
 RUN apk add --no-cache \
     isync \

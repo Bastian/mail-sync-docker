@@ -50,7 +50,7 @@ Host ${IMAP_HOST}
 Port ${IMAP_PORT}
 User ${IMAP_USER}
 Pass ${IMAP_PASS}
-SSLType ${IMAP_TLS}
+TLSType ${IMAP_TLS}
 CertificateFile ${CERT_FILE}
 
 IMAPStore default-remote
